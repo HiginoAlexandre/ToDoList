@@ -23,10 +23,43 @@ savedTheme === null ?
     changeTheme('standard')
     : changeTheme(localStorage.getItem('savedTheme'));
 
+
 // Functions;
 function addToDo(event) {
     // Prevents form from submitting / Prevents form from relaoding;
     event.preventDefault();
+    const todoValue = toDoInput.value.trim();
+
+    if (todoValue === '') {
+        alert("You must write something!");
+        return; // Stop execution if input is empty
+    }
+
+    // Create data object to be sent to server
+    const data = {
+        todo: todoValue,
+        date: new Date().toISOString() // Assuming you want to save the current date
+    };
+
+    // Make AJAX request
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "save_todo.php", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                // Request was successful, do something if needed
+                console.log("ToDo saved successfully");
+            } else {
+                // Error handling
+                console.error("Error saving ToDo:", xhr.responseText);
+            }
+        }
+    };
+
+    // Convert data to JSON and send it
+    xhr.send(JSON.stringify(data));
 
     // toDo DIV;
     const toDoDiv = document.createElement("div");
@@ -34,47 +67,40 @@ function addToDo(event) {
 
     // Create LI
     const newToDo = document.createElement('li');
-    if (toDoInput.value === '') {
-            alert("You must write something!");
-        } 
-    else {
-        // newToDo.innerText = "hey";
-        newToDo.innerText = toDoInput.value;
-        newToDo.classList.add('todo-item');
-        toDoDiv.appendChild(newToDo);
+    // newToDo.innerText = "hey";
+    newToDo.innerText = toDoInput.value;
+    newToDo.classList.add('todo-item');
+    toDoDiv.appendChild(newToDo);
 
-        // Adding to local storage;
-        savelocal(toDoInput.value);
+    // Adding to local storage;
+    savelocal(toDoInput.value);
 
-        // check btn;
-        const checked = document.createElement('button');
-        checked.innerHTML = '<i class="fas fa-check"></i>';
-        checked.classList.add('check-btn', `${savedTheme}-button`);
-        toDoDiv.appendChild(checked);
-        // delete btn;
-        const deleted = document.createElement('button');
-        deleted.innerHTML = '<i class="fas fa-trash"></i>';
-        deleted.classList.add('delete-btn', `${savedTheme}-button`);
-        toDoDiv.appendChild(deleted);
+    // check btn;
+    const checked = document.createElement('button');
+    checked.innerHTML = '<i class="fas fa-check"></i>';
+    checked.classList.add('check-btn', `${savedTheme}-button`);
+    toDoDiv.appendChild(checked);
+    // delete btn;
+    const deleted = document.createElement('button');
+    deleted.innerHTML = '<i class="fas fa-trash"></i>';
+    deleted.classList.add('delete-btn', `${savedTheme}-button`);
+    toDoDiv.appendChild(deleted);
 
-        // Append to list;
-        toDoList.appendChild(toDoDiv);
+    // Append to list;
+    toDoList.appendChild(toDoDiv);
 
-        // CLearing the input;
-        toDoInput.value = '';
-    }
-
-}   
+    // CLearing the input;
+    toDoInput.value = '';
+}
 
 
-function deletecheck(event){
+function deletecheck(event) {
 
     // console.log(event.target);
     const item = event.target;
 
     // delete
-    if(item.classList[0] === 'delete-btn')
-    {
+    if (item.classList[0] === 'delete-btn') {
         // item.parentElement.remove();
         // animation
         item.parentElement.classList.add("fall");
@@ -82,14 +108,13 @@ function deletecheck(event){
         //removing local todos;
         removeLocalTodos(item.parentElement);
 
-        item.parentElement.addEventListener('transitionend', function(){
+        item.parentElement.addEventListener('transitionend', function () {
             item.parentElement.remove();
         })
     }
 
     // check
-    if(item.classList[0] === 'check-btn')
-    {
+    if (item.classList[0] === 'check-btn') {
         item.parentElement.classList.toggle("completed");
     }
 
@@ -98,10 +123,10 @@ function deletecheck(event){
 
 
 // Saving to local storage:
-function savelocal(todo){
+function savelocal(todo) {
     //Check: if item/s are there;
     let todos;
-    if(localStorage.getItem('todos') === null) {
+    if (localStorage.getItem('todos') === null) {
         todos = [];
     }
     else {
@@ -117,21 +142,21 @@ function savelocal(todo){
 function getTodos() {
     //Check: if item/s are there;
     let todos;
-    if(localStorage.getItem('todos') === null) {
+    if (localStorage.getItem('todos') === null) {
         todos = [];
     }
     else {
         todos = JSON.parse(localStorage.getItem('todos'));
     }
 
-    todos.forEach(function(todo) {
+    todos.forEach(function (todo) {
         // toDo DIV;
         const toDoDiv = document.createElement("div");
         toDoDiv.classList.add("todo", `${savedTheme}-todo`);
 
         // Create LI
         const newToDo = document.createElement('li');
-        
+
         newToDo.innerText = todo;
         newToDo.classList.add('todo-item');
         toDoDiv.appendChild(newToDo);
@@ -153,17 +178,17 @@ function getTodos() {
 }
 
 
-function removeLocalTodos(todo){
+function removeLocalTodos(todo) {
     //Check: if item/s are there;
     let todos;
-    if(localStorage.getItem('todos') === null) {
+    if (localStorage.getItem('todos') === null) {
         todos = [];
     }
     else {
         todos = JSON.parse(localStorage.getItem('todos'));
     }
 
-    const todoIndex =  todos.indexOf(todo.children[0].innerText);
+    const todoIndex = todos.indexOf(todo.children[0].innerText);
     // console.log(todoIndex);
     todos.splice(todoIndex, 1);
     // console.log(todos);
@@ -177,14 +202,14 @@ function changeTheme(color) {
 
     document.body.className = color;
     // Change blinking cursor for darker theme:
-    color === 'darker' ? 
+    color === 'darker' ?
         document.getElementById('title').classList.add('darker-title')
         : document.getElementById('title').classList.remove('darker-title');
 
     document.querySelector('input').className = `${color}-input`;
     // Change todo color without changing their status (completed or not):
     document.querySelectorAll('.todo').forEach(todo => {
-        Array.from(todo.classList).some(item => item === 'completed') ? 
+        Array.from(todo.classList).some(item => item === 'completed') ?
             todo.className = `todo ${color}-todo completed`
             : todo.className = `todo ${color}-todo`;
     });
@@ -192,9 +217,9 @@ function changeTheme(color) {
     document.querySelectorAll('button').forEach(button => {
         Array.from(button.classList).some(item => {
             if (item === 'check-btn') {
-              button.className = `check-btn ${color}-button`;  
+                button.className = `check-btn ${color}-button`;
             } else if (item === 'delete-btn') {
-                button.className = `delete-btn ${color}-button`; 
+                button.className = `delete-btn ${color}-button`;
             } else if (item === 'todo-btn') {
                 button.className = `todo-btn ${color}-button`;
             }
